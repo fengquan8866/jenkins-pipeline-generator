@@ -29,10 +29,13 @@ import lombok.Data;
 @EnableConfigurationProperties
 @ConfigurationProperties(locations = "classpath:env.yml")
 @Data
-public class HelloService implements InitializingBean {
+public class ScriptService implements InitializingBean {
 
 	@Autowired
 	Configuration cfg;
+	
+	/** 根路径 */
+	private String rootPath;
 
 	/** 环境配置信息 */
 	private Map<String, Map<String, Map<String, String>>> env;
@@ -58,7 +61,6 @@ public class HelloService implements InitializingBean {
 	 */
 	public void generate() throws TemplateNotFoundException, MalformedTemplateNameException, ParseException,
 			IOException, TemplateException {
-		String root = "F:\\code";
 		for (Entry<String, Map<String, Map<String, String>>> m : env.entrySet()) {
 			Template temp = cfg.getTemplate(m.getKey() + ".ftl");
 			List<Map<String, String>> l = new ArrayList<>();
@@ -66,11 +68,11 @@ public class HelloService implements InitializingBean {
 				if (!singles.contains(p.getKey())){
 					l.add(p.getValue());
 				}
-				String proPath = root + "/" + p.getValue().get("fullName");
+				String proPath = rootPath + "/" + p.getValue().get("fullName");
 				generate(temp, proPath + "/Jenkins/" + m.getKey(), generateMap("item", p.getValue(), m.getKey()));
 			}
 			temp = cfg.getTemplate("list.ftl");
-			generate(temp, root + "/" + m.getKey(), generateMap("env", l, m.getKey()));
+			generate(temp, rootPath + "/" + m.getKey(), generateMap("env", l, m.getKey()));
 		}
 	}
 

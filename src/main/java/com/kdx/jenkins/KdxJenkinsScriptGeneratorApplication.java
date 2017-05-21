@@ -5,14 +5,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
-import com.kdx.jenkins.service.HelloService;
+import com.kdx.jenkins.service.ScriptService;
 
 @SpringBootApplication
 @ComponentScan("com.kdx.jenkins.service")
 public class KdxJenkinsScriptGeneratorApplication {
 
 	@Autowired
-	HelloService helloService;
+	ScriptService scriptService;
 	
 	public static void main(String[] args) {
 		SpringApplication.run(KdxJenkinsScriptGeneratorApplication.class, args);
