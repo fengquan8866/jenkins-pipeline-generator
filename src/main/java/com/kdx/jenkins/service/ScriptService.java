@@ -65,7 +65,7 @@ public class ScriptService implements InitializingBean {
 			Template temp = cfg.getTemplate(m.getKey() + ".ftl");
 			List<Map<String, String>> l = new ArrayList<>();
 			for (Entry<String, Map<String, String>> p : m.getValue().entrySet()) {
-				if (!singles.contains(p.getKey())){
+				if (!singles.contains(p.getKey())) {
 					l.add(p.getValue());
 				}
 				String proPath = rootPath + "/" + p.getValue().get("fullName");

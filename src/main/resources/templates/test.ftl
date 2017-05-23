@@ -23,7 +23,7 @@ node('Slave_95') {
   }
   stage('deploy') {
     dir('./${item.fullName}/build/libs/') {
-      sh 'scp ${item.name}*.jar ${item.ip}:/data/kdx-iot/lib/${item.name}.jar'
+      sh 'scp ${item.name}*.jar ${item.ip}:/data/kdx-iot${(envName=='dev')?string("", "-"+envName)}/lib/${item.name}.jar'
       sh 'ssh ${item.ip} sudo systemctl restart ${item.serviceName!((envName=='dev')?string(item.name, item.name+'-'+envName))}'
     }
   }
