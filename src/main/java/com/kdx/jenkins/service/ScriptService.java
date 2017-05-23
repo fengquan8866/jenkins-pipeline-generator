@@ -46,6 +46,9 @@ public class ScriptService implements InitializingBean {
 	/** 启用的环境 */
 	private List<String> enableEnv;
 	
+	/** 启用的工程 */
+	private List<String> enableProject;
+	
 	/** 默认配置 */
 	private Map<String, String> defaultCfg;
 	
@@ -61,18 +64,26 @@ public class ScriptService implements InitializingBean {
 	 */
 	public void generate() throws TemplateNotFoundException, MalformedTemplateNameException, ParseException,
 			IOException, TemplateException {
-		for (Entry<String, Map<String, Map<String, String>>> m : env.entrySet()) {
-			Template temp = cfg.getTemplate(m.getKey() + ".ftl");
+		for (String envName : enableEnv) {
+			Template temp = cfg.getTemplate(envName + ".ftl");
 			List<Map<String, String>> l = new ArrayList<>();
-			for (Entry<String, Map<String, String>> p : m.getValue().entrySet()) {
-				if (!singles.contains(p.getKey())) {
-					l.add(p.getValue());
+			for (String projectName : enableProject) {
+				Map<String, String> props = null;
+				Map<String, Map<String, String>> projects = env.get(envName);
+				if (projects.containsKey(projectName)) {
+					props = projects.get(projectName);
 				}
-				String proPath = rootPath + "/" + p.getValue().get("fullName");
-				generate(temp, proPath + "/Jenkins/" + m.getKey(), generateMap("item", p.getValue(), m.getKey()));
+				if (!"dev".equals(envName)) {
+					props = assambleProps(envName, projectName, props);
+				}
+				if (!singles.contains(projectName)) {
+					l.add(props);
+				}
+				String proPath = rootPath + "/" + props.get("fullName");
+				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", props, envName));
 			}
 			temp = cfg.getTemplate("list.ftl");
-			generate(temp, rootPath + "/" + m.getKey(), generateMap("env", l, m.getKey()));
+			generateScript(temp, rootPath + "/" + envName, assambleMap("env", l, envName));
 		}
 	}
 
@@ -86,7 +97,7 @@ public class ScriptService implements InitializingBean {
 	 * @throws IOException
 	 * @throws TemplateException
 	 */
-	private void generate(Template temp, String filePath, Map<String, Object> params)
+	private void generateScript(Template temp, String filePath, Map<String, Object> params)
 			throws IOException, TemplateException {
 		PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(getFile(filePath))));
 		try {
@@ -98,7 +109,26 @@ public class ScriptService implements InitializingBean {
 	}
 
 	/**
-	 * 生成map
+	 * 组装模板参数
+	 * @Title: assambleProps
+	 * @Description: TODO(这里用一句话描述这个方法的作用)
+	 * @param envName
+	 * @param projectName
+	 * @param props
+	 * @return
+	 */
+	private Map<String, String> assambleProps(String envName, String projectName, Map<String, String> props) {
+		Map<String, String> params = env.get("dev").get(projectName);
+		if (props != null) {
+			for (Map.Entry<String, String> e : props.entrySet()) {
+				params.put(e.getKey(), e.getValue());
+			}
+		}
+		return params;
+	}
+
+	/**
+	 * 生成模板map
 	 * @Title: generateMap
 	 * @Description: TODO(这里用一句话描述这个方法的作用)
 	 * @param key
@@ -106,7 +136,7 @@ public class ScriptService implements InitializingBean {
 	 * @param envName 
 	 * @return
 	 */
-	public Map<String, Object> generateMap(String key, Object val, String envName) {
+	public Map<String, Object> assambleMap(String key, Object val, String envName) {
 		Map<String, Object> m = new HashMap<>();
 		m.put(key, val);
 		m.put("envName", envName);
