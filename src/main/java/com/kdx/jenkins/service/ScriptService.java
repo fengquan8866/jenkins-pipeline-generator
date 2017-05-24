@@ -5,11 +5,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +17,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import com.kdx.jenkins.util.MapUtil;
+
+import freemarker.cache.StringTemplateLoader;
+import freemarker.cache.TemplateLoader;
 import freemarker.core.ParseException;
 import freemarker.template.Configuration;
 import freemarker.template.MalformedTemplateNameException;
@@ -32,30 +36,29 @@ import lombok.Data;
 public class ScriptService implements InitializingBean {
 
 	@Autowired
-	Configuration cfg;
+	private Configuration cfg;
 	
+	private Configuration stringCfg = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
+
 	/** 根路径 */
 	private String rootPath;
 
 	/** 环境配置信息 */
-	private Map<String, Map<String, Map<String, String>>> env;
-	
+	private Map<String, Map<String, Object>> env;
+
 	/** 单独执行的服务 */
 	private List<String> singles;
 
 	/** 启用的环境 */
 	private List<String> enableEnv;
-	
+
 	/** 启用的工程 */
 	private List<String> enableProject;
-	
-	/** 默认配置 */
-	private Map<String, String> defaultCfg;
-	
+
 	/**
 	 * 生成脚本
+	 * 
 	 * @Title: generate
-	 * @Description: TODO(这里用一句话描述这个方法的作用)
 	 * @throws TemplateNotFoundException
 	 * @throws MalformedTemplateNameException
 	 * @throws ParseException
@@ -66,21 +69,19 @@ public class ScriptService implements InitializingBean {
 			IOException, TemplateException {
 		for (String envName : enableEnv) {
 			Template temp = cfg.getTemplate(envName + ".ftl");
-			List<Map<String, String>> l = new ArrayList<>();
+			List<Map<String, Object>> l = new ArrayList<>();
 			for (String projectName : enableProject) {
-				Map<String, String> props = null;
-				Map<String, Map<String, String>> projects = env.get(envName);
-				if (projects.containsKey(projectName)) {
-					props = projects.get(projectName);
+				Map<String, Object> projectProps = null,
+						projects = env.get(envName);
+				if (projects != null && projects.containsKey(projectName)) {
+					projectProps = (Map<String, Object>) projects.get(projectName);
 				}
-				if (!"dev".equals(envName)) {
-					props = assambleProps(envName, projectName, props);
-				}
+				projectProps = assambleProps(envName, projectName, projectProps);
 				if (!singles.contains(projectName)) {
-					l.add(props);
+					l.add(projectProps);
 				}
-				String proPath = rootPath + "/" + props.get("fullName");
-				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", props, envName));
+				String proPath = rootPath + "/" + projectProps.get("fullName");
+				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", projectProps, envName));
 			}
 			temp = cfg.getTemplate("list.ftl");
 			generateScript(temp, rootPath + "/" + envName, assambleMap("env", l, envName));
@@ -89,8 +90,8 @@ public class ScriptService implements InitializingBean {
 
 	/**
 	 * 生成脚本
+	 * 
 	 * @Title: generate
-	 * @Description: TODO(这里用一句话描述这个方法的作用)
 	 * @param temp		模板
 	 * @param filePath	生成文件路径
 	 * @param params	参数
@@ -110,44 +111,72 @@ public class ScriptService implements InitializingBean {
 
 	/**
 	 * 组装模板参数
+	 * 
 	 * @Title: assambleProps
-	 * @Description: TODO(这里用一句话描述这个方法的作用)
 	 * @param envName
 	 * @param projectName
-	 * @param props
+	 * @param projectProps
 	 * @return
+	 * @throws IOException 
+	 * @throws ParseException 
+	 * @throws MalformedTemplateNameException 
+	 * @throws TemplateNotFoundException 
+	 * @throws TemplateException 
 	 */
-	private Map<String, String> assambleProps(String envName, String projectName, Map<String, String> props) {
-		Map<String, String> params = env.get("dev").get(projectName);
-		if (props != null) {
-			for (Map.Entry<String, String> e : props.entrySet()) {
-				params.put(e.getKey(), e.getValue());
-			}
+	private Map<String, Object> assambleProps(String envName, String projectName, Map<String, Object> projectProps) throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException, TemplateException {
+		Map<String, Object> defaultProps = env.get("default"),
+				envDefaultProps = (Map<String, Object>) env.get(envName).get("default"),
+				props = MapUtil.mergeNew(defaultProps, envDefaultProps);
+		if (!"dev".equals(envName)) {
+			props = MapUtil.mergeLast((Map<String, Object>) env.get("dev").get("default"),
+					(Map<String, Object>) env.get("dev").get(projectName), props);
 		}
-		return params;
+		projectProps = MapUtil.mergeLast(props, projectProps);
+		projectProps.put("envName", envName);
+		projectProps.put("projectName", projectName);
+		
+		Boolean hasExpression;
+		do {
+			hasExpression = false;
+			for (Map.Entry<String, Object> e : projectProps.entrySet()) {
+				if (e.getValue() instanceof String && ((String) e.getValue()).contains("$")) {
+					String key = "env." + envName + "." + projectName + "." + e.getKey();
+					TemplateLoader tl = stringCfg.getTemplateLoader();
+					if (!(tl instanceof StringTemplateLoader)) {
+						tl = new StringTemplateLoader();
+						stringCfg.setTemplateLoader(tl);
+					}
+					((StringTemplateLoader) tl).putTemplate(key, (String) e.getValue());
+					Template t = stringCfg.getTemplate(key);
+					StringWriter sw = new StringWriter();
+					t.process(projectProps, sw);
+					projectProps.put(e.getKey(), sw.toString());
+					hasExpression = (hasExpression || ((String) e.getValue()).contains("$"));
+				}
+			}
+		} while (hasExpression);
+		return projectProps;
 	}
 
 	/**
 	 * 生成模板map
+	 * 
 	 * @Title: generateMap
-	 * @Description: TODO(这里用一句话描述这个方法的作用)
 	 * @param key
 	 * @param val
-	 * @param envName 
+	 * @param envName
 	 * @return
 	 */
 	public Map<String, Object> assambleMap(String key, Object val, String envName) {
 		Map<String, Object> m = new HashMap<>();
 		m.put(key, val);
 		m.put("envName", envName);
-		for (Entry<String, String> e : defaultCfg.entrySet()) {
-			m.put(e.getKey(), e.getValue());
-		}
 		return m;
 	}
 
 	/**
 	 * 返回指定file
+	 * 
 	 * @Title: getFile
 	 * @Description: 会生成父路径
 	 * @param path
@@ -165,7 +194,7 @@ public class ScriptService implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		generate();
+		 generate();
 	}
 
 }

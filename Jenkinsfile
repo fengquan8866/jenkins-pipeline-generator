@@ -20,7 +20,7 @@ node('Slave_95') {
                 'kdxcloud-iot-sequence', 'git.kdxcloud.com:3000/KDXRD/kdxcloud-iot-sequence.git']
     for (int i=0; i<list.size(); i+=2) {
       String key = list[i], val = list[i+1];
-      if (fileExists("/data/kdx-iot/kdx-script/${key}")) {
+      if (fileExists("${path}/${key}")) {
         updateProject(key, val)
         dir("./${key}") {
           sh "cp -rf ${path}/${key}/Jenkins ./"
