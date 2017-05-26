@@ -37,7 +37,7 @@ public class ScriptService implements InitializingBean {
 
 	@Autowired
 	private Configuration cfg;
-	
+
 	private Configuration stringCfg = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
 
 	/** 根路径 */
@@ -71,8 +71,7 @@ public class ScriptService implements InitializingBean {
 			Template temp = cfg.getTemplate(envName + ".ftl");
 			List<Map<String, Object>> l = new ArrayList<>();
 			for (String projectName : enableProject) {
-				Map<String, Object> projectProps = null,
-						projects = env.get(envName);
+				Map<String, Object> projectProps = null, projects = env.get(envName);
 				if (projects != null && projects.containsKey(projectName)) {
 					projectProps = (Map<String, Object>) projects.get(projectName);
 				}
@@ -92,9 +91,12 @@ public class ScriptService implements InitializingBean {
 	 * 生成脚本
 	 * 
 	 * @Title: generate
-	 * @param temp		模板
-	 * @param filePath	生成文件路径
-	 * @param params	参数
+	 * @param temp
+	 *            模板
+	 * @param filePath
+	 *            生成文件路径
+	 * @param params
+	 *            参数
 	 * @throws IOException
 	 * @throws TemplateException
 	 */
@@ -117,13 +119,15 @@ public class ScriptService implements InitializingBean {
 	 * @param projectName
 	 * @param projectProps
 	 * @return
-	 * @throws IOException 
-	 * @throws ParseException 
-	 * @throws MalformedTemplateNameException 
-	 * @throws TemplateNotFoundException 
-	 * @throws TemplateException 
+	 * @throws IOException
+	 * @throws ParseException
+	 * @throws MalformedTemplateNameException
+	 * @throws TemplateNotFoundException
+	 * @throws TemplateException
 	 */
-	private Map<String, Object> assambleProps(String envName, String projectName, Map<String, Object> projectProps) throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException, TemplateException {
+	private Map<String, Object> assambleProps(String envName, String projectName, Map<String, Object> projectProps)
+			throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException,
+			TemplateException {
 		Map<String, Object> defaultProps = env.get("default"),
 				envDefaultProps = (Map<String, Object>) env.get(envName).get("default"),
 				props = MapUtil.mergeNew(defaultProps, envDefaultProps);
@@ -134,12 +138,14 @@ public class ScriptService implements InitializingBean {
 		projectProps = MapUtil.mergeLast(props, projectProps);
 		projectProps.put("envName", envName);
 		projectProps.put("projectName", projectName);
-		
+
 		Boolean hasExpression;
 		do {
 			hasExpression = false;
+			Object originalVal;
 			for (Map.Entry<String, Object> e : projectProps.entrySet()) {
-				if (e.getValue() instanceof String && ((String) e.getValue()).contains("$")) {
+				originalVal = e.getValue();
+				if (originalVal != null && originalVal instanceof String && ((String) originalVal).contains("$")) {
 					String key = "env." + envName + "." + projectName + "." + e.getKey();
 					TemplateLoader tl = stringCfg.getTemplateLoader();
 					if (!(tl instanceof StringTemplateLoader)) {
@@ -150,8 +156,9 @@ public class ScriptService implements InitializingBean {
 					Template t = stringCfg.getTemplate(key);
 					StringWriter sw = new StringWriter();
 					t.process(projectProps, sw);
-					projectProps.put(e.getKey(), sw.toString());
-					hasExpression = (hasExpression || ((String) e.getValue()).contains("$"));
+					e.setValue(sw.toString());
+					hasExpression = (hasExpression
+							|| (((String) e.getValue()).contains("$") && !originalVal.equals(e.getValue())));
 				}
 			}
 		} while (hasExpression);
@@ -194,7 +201,7 @@ public class ScriptService implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		 generate();
+		generate();
 	}
 
 }
