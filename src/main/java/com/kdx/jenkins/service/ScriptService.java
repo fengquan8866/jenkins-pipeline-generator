@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ClassUtils;
 
 import com.kdx.jenkins.util.MapUtil;
 
@@ -34,6 +36,9 @@ import lombok.Data;
 @ConfigurationProperties(locations = "classpath:env.yml")
 @Data
 public class ScriptService implements InitializingBean {
+    
+    private static String DEFAULT_ENV = "dev";
+    private static String DEFAULT_CONFIG_NAME = "default";
 
 	@Autowired
 	private Configuration cfg;
@@ -65,10 +70,12 @@ public class ScriptService implements InitializingBean {
 	 * @throws IOException
 	 * @throws TemplateException
 	 */
-	public void generate() throws TemplateNotFoundException, MalformedTemplateNameException, ParseException,
+	@SuppressWarnings("unchecked")
+    public void generate() throws TemplateNotFoundException, MalformedTemplateNameException, ParseException,
 			IOException, TemplateException {
 		for (String envName : enableEnv) {
-			Template temp = cfg.getTemplate(envName + ".ftl");
+		    URL url = ClassUtils.getDefaultClassLoader().getResource("templates/" + envName + ".ftl");
+			Template temp = cfg.getTemplate((url==null ? DEFAULT_ENV : envName) + ".ftl");
 			List<Map<String, Object>> l = new ArrayList<>();
 			for (String projectName : enableProject) {
 				Map<String, Object> projectProps = null, projects = env.get(envName);
@@ -83,11 +90,11 @@ public class ScriptService implements InitializingBean {
 				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", projectProps, envName));
 			}
 			temp = cfg.getTemplate("list.ftl");
-			generateScript(temp, rootPath + "/" + envName, assambleMap("env", l, envName));
+			generateScript(temp, rootPath + "/" + envName, assambleMap("env", l, envName, url != null));
 		}
 	}
 
-	/**
+    /**
 	 * 生成脚本
 	 * 
 	 * @Title: generate
@@ -125,15 +132,16 @@ public class ScriptService implements InitializingBean {
 	 * @throws TemplateNotFoundException
 	 * @throws TemplateException
 	 */
-	private Map<String, Object> assambleProps(String envName, String projectName, Map<String, Object> projectProps)
+	@SuppressWarnings("unchecked")
+    private Map<String, Object> assambleProps(String envName, String projectName, Map<String, Object> projectProps)
 			throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException,
 			TemplateException {
-		Map<String, Object> defaultProps = env.get("default"),
-				envDefaultProps = (Map<String, Object>) env.get(envName).get("default"),
+        Map<String, Object> defaultProps = env.get(DEFAULT_CONFIG_NAME),
+				envDefaultProps = env.containsKey(envName) ? (Map<String, Object>) env.get(envName).get(DEFAULT_CONFIG_NAME) : null,
 				props = MapUtil.mergeNew(defaultProps, envDefaultProps);
-		if (!"dev".equals(envName)) {
-			props = MapUtil.mergeLast((Map<String, Object>) env.get("dev").get("default"),
-					(Map<String, Object>) env.get("dev").get(projectName), props);
+		if (!DEFAULT_ENV.equals(envName)) {
+			props = MapUtil.mergeLast((Map<String, Object>) env.get(DEFAULT_ENV).get(DEFAULT_CONFIG_NAME),
+					(Map<String, Object>) env.get(DEFAULT_ENV).get(projectName), props);
 		}
 		projectProps = MapUtil.mergeLast(props, projectProps);
 		projectProps.put("envName", envName);
@@ -175,11 +183,16 @@ public class ScriptService implements InitializingBean {
 	 * @return
 	 */
 	public Map<String, Object> assambleMap(String key, Object val, String envName) {
-		Map<String, Object> m = new HashMap<>();
-		m.put(key, val);
-		m.put("envName", envName);
-		return m;
+		return assambleMap(key, val, envName, Boolean.TRUE);
 	}
+
+    private Map<String, Object> assambleMap(String key, Object val, String envName, Object ftlExist) {
+        Map<String, Object> m = new HashMap<>();
+        m.put(key, val);
+        m.put("envName", envName);
+        m.put("ftlExist", (ftlExist != Boolean.FALSE) && (ftlExist != null));
+        return m;
+    }
 
 	/**
 	 * 返回指定file

@@ -69,10 +69,14 @@ dependencies {
     //slf4j-api --> log4j-slf4j-impl --> log4j-api --> log4j-core
     //commons-logging --> log4j-jcl --> log4j-api --> log4j-core
     //java.util.logging --> log4j-jul --> log4j-api --> log4j-core
-    compile("org.slf4j:slf4j-api:$versions.slf4j")
-    compile("org.apache.logging.log4j:log4j-slf4j-impl:$versions.log4j")
-    compile("org.apache.logging.log4j:log4j-api:$versions.log4j")
-    compile("org.apache.logging.log4j:log4j-core:$versions.log4j")
+    // compile("org.slf4j:slf4j-api:$versions.slf4j")
+    // compile("org.apache.logging.log4j:log4j-slf4j-impl:$versions.log4j")
+    // compile("org.apache.logging.log4j:log4j-api:$versions.log4j")
+    // compile("org.apache.logging.log4j:log4j-core:$versions.log4j")
+    compile ("org.springframework.boot:spring-boot-starter-log4j2")
+    springBoot {
+        mainClass = "com.kdx.jenkins.JenkinsScriptGeneratorApplication"
+    }
 }
 
 publishing {

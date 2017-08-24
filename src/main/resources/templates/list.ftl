@@ -1,3 +1,3 @@
 <#list env as item>
-  <#include "${envName}.ftl">
+  <#include "${ftlExist?string(envName, 'dev')}.ftl">
 </#list>

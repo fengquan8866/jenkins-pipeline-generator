@@ -9,12 +9,12 @@ import com.kdx.jenkins.service.ScriptService;
 
 @SpringBootApplication
 @ComponentScan("com.kdx.jenkins.service")
-public class KdxJenkinsScriptGeneratorApplication {
+public class JenkinsScriptGeneratorApplication {
 
 	@Autowired
 	ScriptService scriptService;
 	
 	public static void main(String[] args) {
-		SpringApplication.run(KdxJenkinsScriptGeneratorApplication.class, args);
+		SpringApplication.run(JenkinsScriptGeneratorApplication.class, args);
 	}
 }
