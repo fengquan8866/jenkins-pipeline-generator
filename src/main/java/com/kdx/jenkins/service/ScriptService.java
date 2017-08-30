@@ -30,11 +30,13 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateNotFoundException;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @EnableConfigurationProperties
 @ConfigurationProperties(locations = "classpath:env.yml")
 @Data
+@Slf4j
 public class ScriptService implements InitializingBean {
     
     private static String DEFAULT_ENV = "dev";
@@ -59,6 +61,9 @@ public class ScriptService implements InitializingBean {
 
 	/** 启用的工程 */
 	private List<String> enableProject;
+	
+	/** 前端工程 */
+	private List<String> frontProject;
 
 	/**
 	 * 生成脚本
@@ -74,10 +79,12 @@ public class ScriptService implements InitializingBean {
     public void generate() throws TemplateNotFoundException, MalformedTemplateNameException, ParseException,
 			IOException, TemplateException {
 		for (String envName : enableEnv) {
-		    URL url = ClassUtils.getDefaultClassLoader().getResource("templates/" + envName + ".ftl");
-			Template temp = cfg.getTemplate((url==null ? DEFAULT_ENV : envName) + ".ftl");
+		    String ftlName = null;
+		    Template temp = null;
 			List<Map<String, Object>> l = new ArrayList<>();
 			for (String projectName : enableProject) {
+			    ftlName = getFtlName(envName, projectName);
+			    temp = cfg.getTemplate(ftlName);
 				Map<String, Object> projectProps = null, projects = env.get(envName);
 				if (projects != null && projects.containsKey(projectName)) {
 					projectProps = (Map<String, Object>) projects.get(projectName);
@@ -87,12 +94,48 @@ public class ScriptService implements InitializingBean {
 					l.add(projectProps);
 				}
 				String proPath = rootPath + "/" + projectProps.get("fullName");
-				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", projectProps, envName));
+				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", projectProps, envName, ftlName));
 			}
 			temp = cfg.getTemplate("list.ftl");
-			generateScript(temp, rootPath + "/" + envName, assambleMap("env", l, envName, url != null));
+			generateScript(temp, rootPath + "/" + envName, assambleMap("env", l, envName, ftlName));
 		}
 	}
+
+	/**
+	 * 获取模板名称
+	 * @Title: getFtlName
+	 * @Description: 
+	 * @param envName
+	 * @param projectName
+	 * @return
+	 */
+	private String getFtlName(String envName, String projectName) {
+        String ftlName = null;
+        if (frontProject.contains(projectName)) {
+            ftlName = "front-" + envName + ".ftl";
+            URL url = ClassUtils.getDefaultClassLoader().getResource("templates/" + ftlName);
+            if (url == null) {
+                ftlName = "front.ftl";
+                url = ClassUtils.getDefaultClassLoader().getResource("templates/" + ftlName);
+                if (url == null) {
+                    log.info("前端工程模板不存在! projectName：{}, envName:{}", projectName, envName);
+                    return null;
+                }
+            }
+        } else {
+            ftlName = envName + ".ftl";
+            URL url = ClassUtils.getDefaultClassLoader().getResource("templates/" + ftlName);
+            if (url == null) {
+                ftlName = DEFAULT_ENV + ".ftl";
+                url = ClassUtils.getDefaultClassLoader().getResource("templates/" + ftlName);
+                if (url == null) {
+                    log.info("后端工程模板不存在! projectName：{}, envName:{}", projectName, envName);
+                    return null;
+                }
+            }
+        }
+        return ftlName;
+    }
 
     /**
 	 * 生成脚本
@@ -180,17 +223,15 @@ public class ScriptService implements InitializingBean {
 	 * @param key
 	 * @param val
 	 * @param envName
+	 * @param ftlName
 	 * @return
 	 */
-	public Map<String, Object> assambleMap(String key, Object val, String envName) {
-		return assambleMap(key, val, envName, Boolean.TRUE);
-	}
-
-    private Map<String, Object> assambleMap(String key, Object val, String envName, Object ftlExist) {
+    private Map<String, Object> assambleMap(String key, Object val, String envName, String ftlName) {
         Map<String, Object> m = new HashMap<>();
         m.put(key, val);
         m.put("envName", envName);
-        m.put("ftlExist", (ftlExist != Boolean.FALSE) && (ftlExist != null));
+        m.put("ftlName", ftlName);
+        log.info("----L234----assambleMap   map:{}", m);
         return m;
     }
 
