@@ -19,6 +19,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 import org.springframework.util.ClassUtils;
 
+import com.kdx.jenkins.freemarker.ParentDirMethod;
 import com.kdx.jenkins.util.MapUtil;
 
 import freemarker.cache.StringTemplateLoader;
@@ -231,11 +232,22 @@ public class ScriptService implements InitializingBean {
         m.put(key, val);
         m.put("envName", envName);
         m.put("ftlName", ftlName);
+        assambleCustomMethod(m);
         log.info("----L234----assambleMap   map:{}", m);
         return m;
     }
 
-	/**
+    /**
+     * 添加自定义方法
+     * @Title: assambleCustomMethod
+     * @Description: 
+     * @param m
+     */
+	private void assambleCustomMethod(Map<String, Object> m) {
+        m.put("parent_dir", new ParentDirMethod());
+    }
+
+    /**
 	 * 返回指定file
 	 * 
 	 * @Title: getFile

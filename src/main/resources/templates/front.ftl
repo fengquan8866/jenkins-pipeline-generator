@@ -25,9 +25,10 @@ node('Slave_95') {
   }
   stage('deploy') {
     dir('./${item.fullName}') {
-      sh 'ssh ${item.ip} sudo rm -rf ${item.serverPath}'
-      sh 'scp ${item.name}-${item.version}.tar.gz ${item.ip}:~/'
-      sh 'ssh ${item.ip} sudo tar -zxvf ~/${item.name}-${item.version}.tar.gz -C ${item.serverPath}'
+      sh 'ssh ${item.ip} rm -rf ${item.serverPath}'
+      sh 'scp ${item.name}-${item.version}.tar.gz ${item.ip}:${parent_dir(item.serverPath)}'
+      sh 'ssh ${item.ip} mkdir ${item.serverPath}'
+      sh 'ssh ${item.ip} tar -zxvf ${parent_dir(item.serverPath)}${item.name}-${item.version}.tar.gz -C ${item.serverPath}'
     }
   }
 }
