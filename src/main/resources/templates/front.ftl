@@ -20,7 +20,7 @@ node('Slave_95') {
   }
   stage('mvn test and build') {
     dir('./${item.fullName}') {
-      sh 'tar -zcvf ${item.name}-${item.version}.tar.gz <#if item.excludes??><#list item.excludes as ii,e>--exclude=${e} </#list></#if>./'
+      sh 'tar -zcvf ${item.name}-${item.version}.tar.gz <#if item.excludes??><#list item.excludes as ii,e>--exclude=${e} </#list></#if>./*'
     }
   }
   stage('deploy') {

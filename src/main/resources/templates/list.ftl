@@ -1,3 +1,3 @@
 <#list env as item>
-  <#include "${ftlName}">
+  <#include "${item.ftlName}">
 </#list>

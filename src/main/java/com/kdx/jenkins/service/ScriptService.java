@@ -76,7 +76,6 @@ public class ScriptService implements InitializingBean {
 	 * @throws IOException
 	 * @throws TemplateException
 	 */
-	@SuppressWarnings("unchecked")
     public void generate() throws TemplateNotFoundException, MalformedTemplateNameException, ParseException,
 			IOException, TemplateException {
 		for (String envName : enableEnv) {
@@ -86,18 +85,16 @@ public class ScriptService implements InitializingBean {
 			for (String projectName : enableProject) {
 			    ftlName = getFtlName(envName, projectName);
 			    temp = cfg.getTemplate(ftlName);
-				Map<String, Object> projectProps = null, projects = env.get(envName);
-				if (projects != null && projects.containsKey(projectName)) {
-					projectProps = (Map<String, Object>) projects.get(projectName);
-				}
-				projectProps = assambleProps(envName, projectName, projectProps);
+				Map<String, Object> projectProps = assambleProps(envName, projectName, ftlName);
 				if (!singles.contains(projectName)) {
 					l.add(projectProps);
 				}
 				String proPath = rootPath + "/" + projectProps.get("fullName");
-				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", projectProps, envName, ftlName));
+				log.info("工程：{}，   配置参数：{}", projectProps.get("serviceName"), projectProps);
+				generateScript(temp, proPath + "/Jenkins/" + envName, assambleMap("item", projectProps, envName, (String) projectProps.get(ftlName)));
 			}
-			temp = cfg.getTemplate("list.ftl");
+			ftlName = "list.ftl";
+			temp = cfg.getTemplate(ftlName);
 			generateScript(temp, rootPath + "/" + envName, assambleMap("env", l, envName, ftlName));
 		}
 	}
@@ -168,7 +165,7 @@ public class ScriptService implements InitializingBean {
 	 * @Title: assambleProps
 	 * @param envName
 	 * @param projectName
-	 * @param projectProps
+	 * @param ftlName
 	 * @return
 	 * @throws IOException
 	 * @throws ParseException
@@ -177,20 +174,31 @@ public class ScriptService implements InitializingBean {
 	 * @throws TemplateException
 	 */
 	@SuppressWarnings("unchecked")
-    private Map<String, Object> assambleProps(String envName, String projectName, Map<String, Object> projectProps)
+    private Map<String, Object> assambleProps(String envName, String projectName, String ftlName)
 			throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException,
 			TemplateException {
-        Map<String, Object> defaultProps = env.get(DEFAULT_CONFIG_NAME),
-				envDefaultProps = env.containsKey(envName) ? (Map<String, Object>) env.get(envName).get(DEFAULT_CONFIG_NAME) : null,
-				props = MapUtil.mergeNew(defaultProps, envDefaultProps);
+        Map<String, Object> projectProps = null, // 工程配置
+                projects = env.get(envName); // 环境下所有工程配置
+        // 获取当前环境下的工程配置
+        if (projects != null && projects.containsKey(projectName)) {
+            projectProps = (Map<String, Object>) projects.get(projectName);
+        }
+        
+        Map<String, Object> defaultProps = env.get(DEFAULT_CONFIG_NAME), // 全局默认配置
+				envDefaultProps = env.containsKey(envName) ? (Map<String, Object>) env.get(envName).get(DEFAULT_CONFIG_NAME) : null, // 当前环境默认配置
+				props = MapUtil.mergeNew(defaultProps, envDefaultProps); // 合并以上2个默认配置
+		// 非开发环境，合并 开发环境配置 -> 当前默认配置
 		if (!DEFAULT_ENV.equals(envName)) {
 			props = MapUtil.mergeLast((Map<String, Object>) env.get(DEFAULT_ENV).get(DEFAULT_CONFIG_NAME),
 					(Map<String, Object>) env.get(DEFAULT_ENV).get(projectName), props);
 		}
+		// 合并 默认配置 -> 当前配置
 		projectProps = MapUtil.mergeLast(props, projectProps);
-		projectProps.put("envName", envName);
-		projectProps.put("projectName", projectName);
+		projectProps.putIfAbsent("envName", envName);
+		projectProps.putIfAbsent("projectName", projectName);
+		projectProps.putIfAbsent("ftlName", ftlName);
 
+		// 表达式、变量处理
 		Boolean hasExpression;
 		do {
 			hasExpression = false;
@@ -233,7 +241,7 @@ public class ScriptService implements InitializingBean {
         m.put("envName", envName);
         m.put("ftlName", ftlName);
         assambleCustomMethod(m);
-        log.info("----L234----assambleMap   map:{}", m);
+        log.info("模板渲染参数: {}", m);
         return m;
     }
 
