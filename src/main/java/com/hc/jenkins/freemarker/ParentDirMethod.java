@@ -1,4 +1,4 @@
-package com.kdx.jenkins.freemarker;
+package com.hc.jenkins.freemarker;
 
 import java.util.List;
 

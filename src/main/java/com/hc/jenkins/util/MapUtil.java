@@ -1,4 +1,4 @@
-package com.kdx.jenkins.util;
+package com.hc.jenkins.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.kdx.jenkins.service;
+package com.hc.jenkins.service;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,8 +19,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 import org.springframework.util.ClassUtils;
 
-import com.kdx.jenkins.freemarker.ParentDirMethod;
-import com.kdx.jenkins.util.MapUtil;
+import com.hc.jenkins.freemarker.ParentDirMethod;
+import com.hc.jenkins.util.MapUtil;
 
 import freemarker.cache.StringTemplateLoader;
 import freemarker.cache.TemplateLoader;

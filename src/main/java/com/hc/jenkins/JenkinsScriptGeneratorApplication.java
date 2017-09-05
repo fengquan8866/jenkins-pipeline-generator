@@ -1,11 +1,11 @@
-package com.kdx.jenkins;
+package com.hc.jenkins;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
-import com.kdx.jenkins.service.ScriptService;
+import com.hc.jenkins.service.ScriptService;
 
 @SpringBootApplication
 @ComponentScan("com.kdx.jenkins.service")

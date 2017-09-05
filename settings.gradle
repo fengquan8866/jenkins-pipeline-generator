@@ -16,4 +16,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'kdx-jenkins-script-generator'
+rootProject.name = 'jenkins-pipeline-generator'
