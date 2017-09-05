@@ -1,0 +1,118 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven{ url 'http://192.168.79.8:8081/repository/maven-public/'}   
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.8.RELEASE")
+        classpath "io.spring.gradle:dependency-management-plugin:0.6.0.RELEASE"
+    }
+}
+plugins {
+    id 'java'
+    id 'idea'
+    id 'eclipse'
+    id 'net.researchgate.release' version '2.5.0'
+    id 'com.github.ben-manes.versions' version '0.14.0'
+}
+
+apply plugin: 'project-report'
+apply plugin: 'maven-publish'
+apply plugin: 'spring-boot'
+apply plugin: "io.spring.dependency-management"
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.3'
+}
+
+jar {
+	baseName='iot-log'
+	from('src/main/java'){
+		include '**/*.xml'
+	}
+}
+group = 'com.kdx.jenkins'
+version = '1.0.0-SNAPSHOT'
+
+repositories{
+    maven{ url 'http://192.168.79.8:8081/repository/maven-public/'}
+    mavenLocal()
+}
+
+ext.versions = [
+    'springweb' : '4.3.6.RELEASE',
+    'springsecurity' : '4.2.1.RELEASE',
+    'pagehelper' : '5.0.0',
+    'commonsLang3' : '3.5',
+    'commonsIO' : '2.5',
+    'guava' : '21.0',
+    'gson' : '2.8.0',
+    'guice' : '4.1.0',
+    'protobuf' : '3.2.0',
+    'protobufJavaFormat' : '1.4',
+    'kafka' :  '0.10.2.0',
+    'lombok' : '1.16.16',
+    'logback' : '1.2.1',
+    'log4j' : '2.8',
+    'slf4j'   : '1.7.24'
+
+]
+
+dependencies {
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-freemarker
+	compile("org.springframework.boot:spring-boot-starter-freemarker") {
+    	exclude module : 'spring-boot-starter-tomcat'
+    	exclude module : 'logback-classic'
+	}
+    compile("org.projectlombok:lombok:$versions.lombok")
+    
+    //slf4j-api --> log4j-slf4j-impl --> log4j-api --> log4j-core
+    //commons-logging --> log4j-jcl --> log4j-api --> log4j-core
+    //java.util.logging --> log4j-jul --> log4j-api --> log4j-core
+    // compile("org.slf4j:slf4j-api:$versions.slf4j")
+    // compile("org.apache.logging.log4j:log4j-slf4j-impl:$versions.log4j")
+    // compile("org.apache.logging.log4j:log4j-api:$versions.log4j")
+    // compile("org.apache.logging.log4j:log4j-core:$versions.log4j")
+    compile ("org.springframework.boot:spring-boot-starter-log4j2")
+    springBoot {
+        mainClass = "com.kdx.jenkins.JenkinsScriptGeneratorApplication"
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username "admin"
+                password "admin123"
+            }
+
+            if(project.version.endsWith('-SNAPSHOT')) {
+                url "http://192.168.79.8:8081/repository/maven-snapshots/"
+            } else {
+                url "http://192.168.79.8:8081/repository/maven-releases/"
+            }
+        }
+    }
+}
+
+compileJava {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+build.dependsOn dependencyUpdates
+
+release {
+    tagTemplate = '${name}-${version}'
+    git {
+        requireBranch = 'master'
+        pushToRemote = 'origin'
+        pushToBranchPrefix = ''
+        commitVersionFileOnly = false
+    }
+}
