@@ -8,13 +8,13 @@ import org.springframework.context.annotation.ComponentScan;
 import com.hc.jenkins.service.ScriptService;
 
 @SpringBootApplication
-@ComponentScan("com.kdx.jenkins.service")
-public class JenkinsScriptGeneratorApplication {
+@ComponentScan("com.hc.jenkins.service")
+public class JenkinsPipelineGeneratorApplication {
 
 	@Autowired
 	ScriptService scriptService;
 	
 	public static void main(String[] args) {
-		SpringApplication.run(JenkinsScriptGeneratorApplication.class, args);
+		SpringApplication.run(JenkinsPipelineGeneratorApplication.class, args);
 	}
 }
