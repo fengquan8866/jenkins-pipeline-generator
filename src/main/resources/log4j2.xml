@@ -4,8 +4,8 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
         </Console>
-        <RollingFile name="error" fileName="/data/logs/jenkins-script-generator/error.log"
-            filePattern="/data/logs/jenkins-script-generator/$${date:yyyy-MM}/error-%d{yyyy-MM-dd}-%i.log.gz" Append="true" >
+        <RollingFile name="error" fileName="/data/logs/jenkins-pipeline-generator/error.log"
+            filePattern="/data/logs/jenkins-pipeline-generator/$${date:yyyy-MM}/error-%d{yyyy-MM-dd}-%i.log.gz" Append="true" >
             <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
             <Policies>
@@ -13,8 +13,8 @@
             </Policies>
             <DefaultRolloverStrategy fileIndex="min" max="16"/>
         </RollingFile>
-        <RollingFile name="log" fileName="/data/logs/jenkins-script-generator/log.log"
-            filePattern="/data/logs/jenkins-script-generator/$${date:yyyy-MM}/log-%d{yyyy-MM-dd}-%i.log.gz" Append="true" >
+        <RollingFile name="log" fileName="/data/logs/jenkins-pipeline-generator/log.log"
+            filePattern="/data/logs/jenkins-pipeline-generator/$${date:yyyy-MM}/log-%d{yyyy-MM-dd}-%i.log.gz" Append="true" >
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="20M"/>
