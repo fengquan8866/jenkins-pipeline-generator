@@ -2,9 +2,15 @@
 * 半自动化部署，Jenkins脚本生成器
 * 可自定义配置部署哪（几）个工程
 * 可自定义配置部署哪些环境
+* springboot工程
+* gradle构建
+
+### 待处理：
+- 同一个微服务分布式部署
+- 配置文件env.yml，不同系统，分不同文件配置，如env-iot.yml、env-mps.yml
 
 ### 1.env.yml 配置：
-***
+```
     # 脚本生成路径
     rootPath: /data/mps/script
     
@@ -91,6 +97,7 @@
         MPS-FE:
           ip: 192.168.79.81
           serverPath: /data/${systemName}/html
+```
 
 - 配置解析（环境配置、project配置，均为以下）：
 ***
