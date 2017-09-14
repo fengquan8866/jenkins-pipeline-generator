@@ -14,92 +14,92 @@
 ### 1.env.yml 配置：
 
 ```
-    # 脚本生成路径
-    rootPath: /data/mps/script
+# 脚本生成路径
+rootPath: /data/mps/script
 
-    # 启用的环境
-    enableEnv:
-      - dev
-      - test
-      - aliyun
+# 启用的环境
+enableEnv:
+  - dev
+  - test
+  - aliyun
 
-    # 前端项目
-    frontProject:
-      - MPS-FE
+# 前端项目
+frontProject:
+  - MPS-FE
 
-    # 启用的工程
-    enableProject:
-      - mps-device
-      - MPS-FE
+# 启用的工程
+enableProject:
+  - mps-device
+  - MPS-FE
 
-    # 单独启动的工程
-    singles:
-      - eureka-server
-      - config-server
+# 单独启动的工程
+singles:
+  - eureka-server
+  - config-server
 
-    # 配置顺序：project config > current env default config > default config [ > dev project config > dev default config ]
-    env:
-      # 默认配置（default config）
-      default:
-        # 服务器IP
-        # ip: 
-        # 系统名称
-        systemName: hc-iot
-        # 工程名称
-        name: ${projectName}
-        # 工程全名称
-        fullName: hccloud-${projectName}
-        # 工程源码对应的 git url
-        gitUrl: git.hccloud.com:3000/hc/${fullName}.git
-        # 服务名称（centos上的服务名称）
-        serviceName: ${projectName}${(envName=='dev')?string("", "-"+envName)}
-        # 部署路径（jar包部署到服务器上的位置）
-        serverPath: /data/${systemName}${(envName=='dev')?string("", "-"+envName)}/lib
-        # 版本
-        version: 2.6.0
-        # 配置文件部署位置，config-server所需
-        # configPath: 
-        # 前端项目需要，压缩时去除部分文件（夹）
-        excludes:
-          - .git
-          - node_modules
-          - .idea
-          - .vscode
-          - "*.gz"
-          - "*.zip"
-      # 开发环境
-      dev:
-        # 开发环境默认配置（current env default config）
-        # default: ...
-        eureka-server:
-          name: eureka-server
-          fullName: hccloud-eureka-server
-          ip: 192.168.79.83
-          serviceName: eureka-server
-          serverPath: /data/${systemName}/lib
-        config-server:
-          ip: 192.168.79.83
-          configPath: /data/${systemName}/conf
-        iot-tool:
-          ip: 192.168.79.84
-        iot-user:
-          ip: 192.168.79.84
+# 配置顺序：project config > current env default config > default config [ > dev project config > dev default config ]
+env:
+  # 默认配置（default config）
+  default:
+    # 服务器IP
+    # ip: 
+    # 系统名称
+    systemName: hc-iot
+    # 工程名称
+    name: ${projectName}
+    # 工程全名称
+    fullName: hccloud-${projectName}
+    # 工程源码对应的 git url
+    gitUrl: git.hccloud.com:3000/hc/${fullName}.git
+    # 服务名称（centos上的服务名称）
+    serviceName: ${projectName}${(envName=='dev')?string("", "-"+envName)}
+    # 部署路径（jar包部署到服务器上的位置）
+    serverPath: /data/${systemName}${(envName=='dev')?string("", "-"+envName)}/lib
+    # 版本
+    version: 2.6.0
+    # 配置文件部署位置，config-server所需
+    # configPath: 
+    # 前端项目需要，压缩时去除部分文件（夹）
+    excludes:
+      - .git
+      - node_modules
+      - .idea
+      - .vscode
+      - "*.gz"
+      - "*.zip"
+  # 开发环境
+  dev:
+    # 开发环境默认配置（current env default config）
+    # default: ...
+    eureka-server:
+      name: eureka-server
+      fullName: hccloud-eureka-server
+      ip: 192.168.79.83
+      serviceName: eureka-server
+      serverPath: /data/${systemName}/lib
+    config-server:
+      ip: 192.168.79.83
+      configPath: /data/${systemName}/conf
+    iot-tool:
+      ip: 192.168.79.84
+    iot-user:
+      ip: 192.168.79.84
 
-      test:
-        # 测试环境默认配置（current env default config）
-        # default: ...
-        eureka-server:
-          ip: 192.168.79.88
-          serviceName: eureka-server
-        config-server:
-          ip: 192.168.79.88
-          serviceName: config-server
+  test:
+    # 测试环境默认配置（current env default config）
+    # default: ...
+    eureka-server:
+      ip: 192.168.79.88
+      serviceName: eureka-server
+    config-server:
+      ip: 192.168.79.88
+      serviceName: config-server
 
-        mps-user:
-          serverPath: /data/${systemName}/lib_test
-        MPS-FE:
-          ip: 192.168.79.81
-          serverPath: /data/${systemName}/html
+    mps-user:
+      serverPath: /data/${systemName}/lib_test
+    MPS-FE:
+      ip: 192.168.79.81
+      serverPath: /data/${systemName}/html
 ```
 
 * 配置解析（环境配置、project配置，均为以下）：
