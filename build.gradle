@@ -1,7 +1,7 @@
 buildscript {
     repositories {
         mavenLocal()
-        maven{ url 'http://192.168.79.8:8081/repository/maven-public/'}   
+        maven{ url 'http://hc.maven:8081/repository/maven-public/'}   
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.8.RELEASE")
@@ -31,12 +31,11 @@ jar {
 		include '**/*.xml'
 	}
 }
-group = 'com.kdx.jenkins'
-version = '1.0.0-SNAPSHOT'
+group = 'com.hc.jenkins'
 
 repositories{
-    maven{ url 'http://192.168.79.8:8081/repository/maven-public/'}
     mavenLocal()
+    maven{ url 'http://hc.maven:8081/repository/maven-public/'}
 }
 
 ext.versions = [
@@ -75,7 +74,7 @@ dependencies {
     // compile("org.apache.logging.log4j:log4j-core:$versions.log4j")
     compile ("org.springframework.boot:spring-boot-starter-log4j2")
     springBoot {
-        mainClass = "com.kdx.jenkins.JenkinsScriptGeneratorApplication"
+        mainClass = "com.hc.jenkins.JenkinsScriptGeneratorApplication"
     }
 }
 
@@ -93,9 +92,9 @@ publishing {
             }
 
             if(project.version.endsWith('-SNAPSHOT')) {
-                url "http://192.168.79.8:8081/repository/maven-snapshots/"
+                url "http://hc.maven:8081/repository/maven-snapshots/"
             } else {
-                url "http://192.168.79.8:8081/repository/maven-releases/"
+                url "http://hc.maven:8081/repository/maven-releases/"
             }
         }
     }

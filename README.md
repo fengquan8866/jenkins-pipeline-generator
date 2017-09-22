@@ -133,7 +133,8 @@ excludes:
 1.本地安装jdk
 2.本地安装gradle
 3.本地下载工程：http://git.kdxcloud.com:3000/huangchao/kdx-jenkins-script-generator.git
-4.服务器上需提前创建好相应的文件夹
+4.服务器上需提前创建好相应的文件夹，如：
+    /data/mps-test/lib/
 5.服务器上添加服务，测试非开发环境，需指定环境，如：
     --spring.profiles.active=test
 ```
@@ -171,6 +172,13 @@ excludes:
 
 2.tar: .: file changed as we read it
 当再次执行时，未出现该错误
+
+3.Caused by: org.yaml.snakeyaml.scanner.ScannerException: while scanning for the next token
+found character '\t(TAB)' that cannot start any token. (Do not use \t(TAB) for indentation)
+ in 'reader', line 126, column 5:
+                ip: mps.device
+        ^
+原因：env.yml文件中含有 Tab，改成空格即可
 ```
 
 
