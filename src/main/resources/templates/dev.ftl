@@ -31,7 +31,7 @@ node('Slave_95') {
       <#if item.configPath??>
         sh 'scp ./src/main/resources/*-*.yml ${item.ip}:${item.configPath}/'
       </#if>
-      sh 'scp ${item.name}*.jar ${item.ip}:${item.serverPath}/${item.name}.jar'
+      sh 'scp *${item.name}*.jar ${item.ip}:${item.serverPath}/${item.name}.jar'
       sh 'ssh ${item.ip} sudo systemctl restart ${item.serviceName}'
     }
   }
